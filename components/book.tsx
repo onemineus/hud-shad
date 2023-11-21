@@ -28,17 +28,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SiGooglemeet } from "react-icons/si";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { BiExit } from "react-icons/bi";
 import { getAccessToken, getMessage } from "@huddle01/auth";
 import { useAtom } from "jotai";
-import { isCoach, isCreating } from "@/lib/jotai/atoms";
+import { accessToken, isCoach, isCreating } from "@/lib/jotai/atoms";
 import { Switch, Space } from "antd";
 import { IoLogOut } from "react-icons/io5";
 import { MdLogout } from "react-icons/md";
-import CalenderElement from "./calenderElement";
+import CalenderElement, { handleSignClick } from "./calenderElement";
 import {
   coach,
   eventsList,
@@ -201,7 +202,7 @@ const Book = () => {
             {/* stud create */}
             {isConnected && domLoaded && isCreatingPrivate ? (
               <div className="p-8 flex flex-col justify-betwee lg:flex-row lg:space-x-8">
-                <div className="flex w-full flex-col space-y-4 my-4">
+                <div className="flex w-full flex-col space-y-4 my-">
                   <div className="text-xl font-bold">Select a date</div>
                   <div className="w-full">
                     <Calendar
@@ -370,6 +371,15 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
     const a = filterSessionsByDate(sessionStorage, day);
     setDayEvents(a);
   };
+  const [accessTokenPrivate, setAccessTokenPrivate] = useAtom(accessToken);
+  const { isConnected, address } = useAccount();
+
+  const { signMessage } = useSignMessage({
+    onSuccess: async (data) => {
+      const token = await getAccessToken(data, address as string);
+      setAccessTokenPrivate(token.accessToken);
+    },
+  });
 
   const [dayEvents, setDayEvents] = useState<
     {
@@ -393,8 +403,8 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
 
   return (
     <div>
-      <div className="p-8 flex flex-col space-y-4">
-        <div className="flex flex-col space-y-4 py-4">
+      <div className="p-8 flex space-y-8 flex-col lg:space-y-0 lg:space-x-8 lg:flex-row justify-between">
+        <div className="flex flex-col w-full space-y-4">
           <div className="text-xl font-bold">Hi, {coach.name}</div>
           <Calendar
             // defaultMonth={new Date(2023, 10, 8)}
@@ -409,29 +419,42 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
             onDayClick={handleDayClick}
           />
         </div>
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col w-full space-y-4">
           <div className="text-xl font-bold">Your Sessions</div>
           <div className="h-96 bg-slate-800 space-y-4 rounded-lg p-4 overflow-y-auto">
-            {dayEvents.map((event) => {
-              return (
-                <div className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center">
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex text-sm items-center space-x-2">
-                      <div className="bg-slate-800 px-3 py-1 rounded-full text-sm capitalize">
-                        {event.state}
+            {dayEvents.length > 0 ? (
+              <div>
+                {dayEvents.map((event) => {
+                  return (
+                    <div className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center">
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex text-sm items-center space-x-2">
+                          <div className="bg-slate-800 px-3 py-1 rounded-full text-sm capitalize">
+                            {event.state}
+                          </div>
+                          <div>{formatDate(event.date)}</div>
+                        </div>
+                        <div className="text-xl font-bold">{event.title}</div>
+                        <div className="flex text-sm space-x-2">
+                          <div>{`${event.fromHour}:00 - ${event.toHour}:00 ,`}</div>
+                          <div>{event.game}</div>
+                        </div>
                       </div>
-                      <div>{formatDate(event.date)}</div>
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => {
+                          handleSignClick(getMessage, address, signMessage);
+                        }}
+                      >
+                        <SiGooglemeet size={35} />
+                      </div>
                     </div>
-                    <div className="text-xl">{event.title}</div>
-                    <div className="flex text-sm space-x-2">
-                      <div>{`${event.fromHour}:00 - ${event.toHour}:00 ,`}</div>
-                      <div>{event.game}</div>
-                    </div>
-                  </div>
-                  <div>asdas</div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="w-full h-full flex justify-center items-center">No meetings today!</div>
+            )}
           </div>
         </div>
       </div>

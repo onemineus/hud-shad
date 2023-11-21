@@ -77,7 +77,7 @@ const getEventsByDate = (targetDate: any, eventsList: any[]) => {
   );
 };
 
-const handleSignClick = async (
+export const handleSignClick = async (
   getMessage: Function,
   address: any,
   signMessage: Function
@@ -85,3 +85,4 @@ const handleSignClick = async (
   const msg = await getMessage(address as string);
   signMessage({ message: msg.message });
 };
+
