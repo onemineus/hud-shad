@@ -198,4 +198,28 @@ export let sessionStorage: {
   state: string;
   game: string;
   roomCode: string;
-}[] = [];
+}[] = [
+  {
+    coach: "Tenz",
+    date: new Date("2023-11-23T00:00:00.000"),
+    fromHour: 19,
+    game: "VALORANT",
+    roomCode: "dyv-tfkm-yzy",
+    state: "pending",
+    student: "Raze",
+    title: "Free Consultation",
+    toHour: 20,
+  },
+];
+
+let a = {
+  coach: "Tenz",
+  date: Date.now(),
+  fromHour: 19,
+  game: "VALORANT",
+  roomCode: "dyv-tfkm-yzy",
+  state: "pending",
+  student: "Raze",
+  title: "Free Consultation",
+  toHour: 20,
+};

@@ -37,14 +37,48 @@ export const formatDate = (date: Date): string => {
 };
 
 export const extractUniqueDates = (eventsList: { date: Date }[]) => {
-  const uniqueDates: any = new Set();
-  eventsList.forEach((event) => {
-    const { date } = event;
-    uniqueDates.add(date.toDateString());
+  const uniqueDatesSet = new Set<number>(); // Using Set<number> for unique timestamps
+
+  eventsList.forEach((obj) => {
+    uniqueDatesSet.add(obj.date.getTime());
   });
-  const uniqueDatesArray = [...uniqueDates].map(
-    (dateString) => new Date(dateString)
+
+  // Convert the timestamps back to Date objects
+  const uniqueDatesArray = Array.from(uniqueDatesSet).map(
+    (timestamp) => new Date(timestamp)
   );
 
+  console.log(uniqueDatesArray);
   return uniqueDatesArray;
 };
+
+export function filterSessionsByDate(
+  objects: {
+    coach: string;
+    student: string;
+    title: string;
+    date: Date;
+    fromHour: number;
+    toHour: number;
+    state: string;
+    game: string;
+    roomCode: string;
+  }[],
+  targetDate: Date
+): {
+  coach: string;
+  student: string;
+  title: string;
+  date: Date;
+  fromHour: number;
+  toHour: number;
+  state: string;
+  game: string;
+  roomCode: string;
+}[] {
+  return objects.filter(
+    (obj) =>
+      obj.date.toISOString().split("T")[0] ===
+      targetDate.toISOString().split("T")[0]
+  );
+}

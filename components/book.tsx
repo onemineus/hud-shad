@@ -47,7 +47,12 @@ import {
 } from "@/lib/db/simpleStorage";
 import { Calendar } from "./ui/calendar";
 import { DayClickEventHandler } from "react-day-picker";
-import { extractUniqueDates, formatDate, getRoomCode } from "@/lib/utils";
+import {
+  extractUniqueDates,
+  filterSessionsByDate,
+  formatDate,
+  getRoomCode,
+} from "@/lib/utils";
 import Hud from "./hud";
 
 const Book = () => {
@@ -63,9 +68,8 @@ const Book = () => {
       toHour: 22,
     },
   };
-  const [bookedDates, setBookedDates] = useState(
-    extractUniqueDates(sessionStorage)
-  );
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+
   const [isCoachPrivate, setIsCoachPrivate] = useAtom(isCoach);
   const [isCreatingPrivate, setIsCreatingPrivate] = useAtom(isCreating);
   const [isDoneCreating, setIsDoneCreating] = useState(false);
@@ -102,7 +106,10 @@ const Book = () => {
 
   useEffect(() => {
     setDomLoaded(true);
-  }, []);
+    const b = extractUniqueDates(sessionStorage);
+    console.log(b);
+    setBookedDates(b);
+  }, [isCoachPrivate]);
 
   useEffect(() => {
     console.log(selectedDate);
@@ -356,14 +363,34 @@ export default Book;
 
 const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
   console.log("bookedDates", bookedDates);
-
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date()
-  );
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const bookedStyle = { border: "1px solid currentColor" };
   const handleDayClick: DayClickEventHandler = (day, index) => {
     console.log(day);
+    const a = filterSessionsByDate(sessionStorage, day);
+    setDayEvents(a);
   };
+
+  const [dayEvents, setDayEvents] = useState<
+    {
+      coach: string;
+      student: string;
+      title: string;
+      date: Date;
+      fromHour: number;
+      toHour: number;
+      state: string;
+      game: string;
+      roomCode: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    const a = filterSessionsByDate(sessionStorage, selectedDate);
+    console.log(a);
+    setDayEvents(a);
+  }, [selectedDate]);
+
   return (
     <div>
       <div className="p-8 flex flex-col space-y-4">
@@ -373,18 +400,38 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
             // defaultMonth={new Date(2023, 10, 8)}
             modifiers={{ booked: bookedDates }}
             selected={selectedDate}
-            onSelect={setSelectedDate}
+            onSelect={(date: Date | undefined) => {
+              if (date) {
+                setSelectedDate(date);
+              }
+            }}
             modifiersStyles={{ booked: bookedStyle }}
             onDayClick={handleDayClick}
           />
         </div>
         <div className="flex flex-col space-y-4">
           <div className="text-xl font-bold">Your Sessions</div>
-          <div className="h-96 bg-slate-800 space-y-4 rounded-lg p-4">
-            <div className="bg-slate-600 w-full h-20 rounded-md">
-                
-            </div>
-            <div className="bg-slate-600 w-full h-20 rounded-md"></div>
+          <div className="h-96 bg-slate-800 space-y-4 rounded-lg p-4 overflow-y-auto">
+            {dayEvents.map((event) => {
+              return (
+                <div className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center">
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex text-sm items-center space-x-2">
+                      <div className="bg-slate-800 px-3 py-1 rounded-full text-sm capitalize">
+                        {event.state}
+                      </div>
+                      <div>{formatDate(event.date)}</div>
+                    </div>
+                    <div className="text-xl">{event.title}</div>
+                    <div className="flex text-sm space-x-2">
+                      <div>{`${event.fromHour}:00 - ${event.toHour}:00 ,`}</div>
+                      <div>{event.game}</div>
+                    </div>
+                  </div>
+                  <div>asdas</div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
