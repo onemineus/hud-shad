@@ -55,6 +55,8 @@ import {
   getRoomCode,
 } from "@/lib/utils";
 import Hud from "./hud";
+import { toast, useToast } from "./ui/use-toast";
+import { useRouter } from "next/navigation";
 
 const Book = () => {
   const sessionDataProp = {
@@ -118,7 +120,7 @@ const Book = () => {
   }, [selectedDate]);
 
   const bookedStyle = { border: "1px solid currentColor" };
-
+  const { toast } = useToast();
   return (
     <div className="bg-slate-950 min-h-screen text-slate-100">
       <div>
@@ -195,7 +197,14 @@ const Book = () => {
         </div>
         {isCoachPrivate ? (
           // coach state
-          <Coach bookedDates={bookedDates} />
+          <div>
+            {isConnected && domLoaded && <Coach bookedDates={bookedDates} />}
+            {!isConnected && domLoaded && (
+              <div className="absolute top-1/2 pt-16 w-full flex justify-center items-center">
+                <div>Please connect your wallet</div>
+              </div>
+            )}
+          </div>
         ) : (
           // {/* stud states */}
           <div>
@@ -330,6 +339,12 @@ const Book = () => {
                             sessionStorage.push(sessionData);
                             console.log(sessionStorage);
                             setIsDoneCreating(true);
+                            toast({
+                              title: "Scheduled: Catch up",
+                              description: `${formatDate(
+                                selectedSlot.date
+                              )} at ${selectedSlot.fromHour}:00`,
+                            });
                           }}
                         >
                           Create session
@@ -367,12 +382,14 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const bookedStyle = { border: "1px solid currentColor" };
   const handleDayClick: DayClickEventHandler = (day, index) => {
+    setAccessTokenPrivate("");
     console.log(day);
     const a = filterSessionsByDate(sessionStorage, day);
     setDayEvents(a);
   };
   const [accessTokenPrivate, setAccessTokenPrivate] = useAtom(accessToken);
   const { isConnected, address } = useAccount();
+  const router = useRouter();
 
   const { signMessage } = useSignMessage({
     onSuccess: async (data) => {
@@ -401,6 +418,12 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
     setDayEvents(a);
   }, [selectedDate]);
 
+  useEffect(() => {
+    if (accessTokenPrivate !== "") {
+      router.push("/session");
+    }
+  }, [accessTokenPrivate]);
+
   return (
     <div>
       <div className="p-8 flex space-y-8 flex-col lg:space-y-0 lg:space-x-8 lg:flex-row justify-between">
@@ -421,9 +444,9 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
         </div>
         <div className="flex flex-col w-full space-y-4">
           <div className="text-xl font-bold">Your Sessions</div>
-          <div className="h-96 bg-slate-800 space-y-4 rounded-lg p-4 overflow-y-auto">
+          <div className="h-96 shrink-0 bg-slate-800 flex flex-col rounded-lg p-4 overflow-y-auto">
             {dayEvents.length > 0 ? (
-              <div>
+              <div className="flex flex-col space-y-4">
                 {dayEvents.map((event) => {
                   return (
                     <div className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center">
@@ -453,7 +476,9 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
                 })}
               </div>
             ) : (
-              <div className="w-full h-full flex justify-center items-center">No meetings today!</div>
+              <div className="w-full h-full flex justify-center items-center">
+                No meetings today!
+              </div>
             )}
           </div>
         </div>

@@ -1,5 +1,5 @@
 "use client";
-
+import { Toaster } from "@/components/ui/toaster";
 import Hud from "@/components/hud";
 import {
   WagmiConfig,
@@ -52,6 +52,7 @@ export default function Home() {
     <WagmiConfig config={config}>
       {/* <Hud /> */}
       <Book />
+      <Toaster />
     </WagmiConfig>
   );
 }
