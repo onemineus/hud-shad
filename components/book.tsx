@@ -106,9 +106,11 @@ const Book = () => {
       setSelectedDate(day);
     }
   };
+  const router = useRouter();
 
   useEffect(() => {
     setDomLoaded(true);
+    router.push("/session");
     const b = extractUniqueDates(sessionStorage);
     console.log(b);
     setBookedDates(b);
