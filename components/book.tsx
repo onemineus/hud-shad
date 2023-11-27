@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { BiExit } from "react-icons/bi";
 import { getAccessToken, getMessage } from "@huddle01/auth";
 import { useAtom } from "jotai";
-import { accessToken, isCoach, isCreating } from "@/lib/jotai/atoms";
+import { accessToken, isCoach, isCreating, roomCode } from "@/lib/jotai/atoms";
 import { Switch, Space } from "antd";
 import { IoLogOut } from "react-icons/io5";
 import { MdLogout } from "react-icons/md";
@@ -57,48 +57,48 @@ import {
 import Hud from "./hud";
 import { toast, useToast } from "./ui/use-toast";
 import { useRouter } from "next/navigation";
+import { EventType, SlotType } from "@/lib/types";
+
+
 
 const Book = () => {
-  const sessionDataProp = {
+  // the current coach user data and his availability
+  // demo
+  // should get fetched from DB
+  const coachDataProp = {
     id: 1,
     coach: "Tenz",
     title: "Free Consultation",
     game: "VALORANT",
     availability: {
       fromDate: new Date("2023-11-16T00:00:00.000"),
-      toDate: new Date("2023-11-26T00:00:00.000"),
+      toDate: new Date("2023-11-30T00:00:00.000"),
       fromHour: 12,
       toHour: 22,
     },
   };
-  const [bookedDates, setBookedDates] = useState<Date[]>([]);
 
+  // states
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [isCoachPrivate, setIsCoachPrivate] = useAtom(isCoach);
   const [isCreatingPrivate, setIsCreatingPrivate] = useAtom(isCreating);
   const [isDoneCreating, setIsDoneCreating] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{
-    date: Date;
-    fromHour: number;
-    toHour: number;
-  } | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<SlotType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
   const [domLoaded, setDomLoaded] = useState(false);
+
+  // wagmi things
   const { connector: activeConnector, isConnected, address } = useAccount();
   const { connect, connectors, error, isLoading, pendingConnector } =
     useConnect();
   const { disconnect } = useDisconnect();
-  const { signMessage } = useSignMessage({
-    onSuccess: async (data) => {
-      const token = await getAccessToken(data, address as string);
-    },
-  });
 
   const handleDayClick: DayClickEventHandler = (day, modifiers) => {
     if (
-      day >= sessionDataProp.availability.fromDate &&
-      day <= sessionDataProp.availability.fromDate
+      day >= coachDataProp.availability.fromDate &&
+      day <= coachDataProp.availability.fromDate
     ) {
       setSelectedDate(day);
     } else {
@@ -106,29 +106,21 @@ const Book = () => {
       setSelectedDate(day);
     }
   };
-  const router = useRouter();
 
   useEffect(() => {
     setDomLoaded(true);
-    router.push("/session");
-    const b = extractUniqueDates(sessionStorage);
-    console.log(b);
-    setBookedDates(b);
+    const dates = extractUniqueDates(sessionStorage);
+    console.log(dates);
+    setBookedDates(dates);
   }, [isCoachPrivate]);
 
-  useEffect(() => {
-    console.log(selectedDate);
-    console.log(sessionDataProp.availability.fromDate);
-  }, [selectedDate]);
-
-  const bookedStyle = { border: "1px solid currentColor" };
   const { toast } = useToast();
   return (
-    <div className="bg-slate-950 min-h-screen text-slate-100">
+    <div className="bg-zinc-950 min-h-screen text-slate-100">
       <div>
         {/* nav bar */}
-        <div className="bg-slate-900 border-b border-slate-700 h-16 flex items-center justify-between px-4">
-          <div className="text-xl">Huddle02</div>
+        <div className="bg-zinc-950 border-b border-slate-700 h-16 flex items-center justify-between px-4">
+          <div className="text-xl font-bold">Huddle02</div>
           <div className="flex items-center space-x-4">
             <div className="flex space-x-4">
               {!isCoachPrivate && (
@@ -242,21 +234,20 @@ const Book = () => {
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {selectedDate >=
-                          sessionDataProp.availability.fromDate &&
-                        selectedDate <= sessionDataProp.availability.toDate ? (
+                        {selectedDate >= coachDataProp.availability.fromDate &&
+                        selectedDate <= coachDataProp.availability.toDate ? (
                           <SelectGroup>
                             <SelectLabel>Available Slots</SelectLabel>
                             {Array.from(
                               {
                                 length:
-                                  sessionDataProp.availability.toHour -
-                                  sessionDataProp.availability.fromHour +
+                                  coachDataProp.availability.toHour -
+                                  coachDataProp.availability.fromHour +
                                   1,
                               },
                               (_, index) => {
                                 const currentHour =
-                                  sessionDataProp.availability.fromHour + index;
+                                  coachDataProp.availability.fromHour + index;
                                 return (
                                   <SelectItem
                                     key={index}
@@ -328,14 +319,14 @@ const Book = () => {
                           onClick={async () => {
                             const code = await getRoomCode();
                             const sessionData = {
-                              coach: sessionDataProp.coach,
+                              coach: coachDataProp.coach,
                               student: student.name,
-                              title: sessionDataProp.title,
+                              title: coachDataProp.title,
                               date: selectedSlot.date,
                               fromHour: selectedSlot.fromHour,
                               toHour: selectedSlot.toHour,
                               state: "pending",
-                              game: sessionDataProp.game,
+                              game: coachDataProp.game,
                               roomCode: code,
                             };
                             sessionStorage.push(sessionData);
@@ -390,7 +381,7 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
     setDayEvents(a);
   };
   const [accessTokenPrivate, setAccessTokenPrivate] = useAtom(accessToken);
-  const { isConnected, address } = useAccount();
+  const { address } = useAccount();
   const router = useRouter();
 
   const { signMessage } = useSignMessage({
@@ -400,19 +391,8 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
     },
   });
 
-  const [dayEvents, setDayEvents] = useState<
-    {
-      coach: string;
-      student: string;
-      title: string;
-      date: Date;
-      fromHour: number;
-      toHour: number;
-      state: string;
-      game: string;
-      roomCode: string;
-    }[]
-  >([]);
+  const [dayEvents, setDayEvents] = useState<EventType[]>([]);
+  const [roomCodePrivate, setRoomCodePrivate] = useAtom(roomCode);
 
   useEffect(() => {
     const a = filterSessionsByDate(sessionStorage, selectedDate);
@@ -467,8 +447,9 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
                       </div>
                       <div
                         className="cursor-pointer"
-                        onClick={() => {
+                        onClick={async () => {
                           handleSignClick(getMessage, address, signMessage);
+                          setRoomCodePrivate(event.roomCode);
                         }}
                       >
                         <SiGooglemeet size={35} />

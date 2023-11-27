@@ -181,7 +181,7 @@ export let coachData: {
     name: "Tenz",
     availability: {
       fromDate: new Date("2023-11-16T02:00:00.000Z"),
-      toDate: new Date("2023-11-26T02:00:00.000Z"),
+      toDate: new Date("2023-11-30T02:00:00.000Z"),
       fromHour: 12,
       toHour: 22,
     },
@@ -201,10 +201,10 @@ export let sessionStorage: {
 }[] = [
   {
     coach: "Tenz",
-    date: new Date("2023-11-23T00:00:00.000"),
+    date: new Date("2023-11-28T00:00:00.000"),
     fromHour: 19,
     game: "VALORANT",
-    roomCode: "dyv-tfkm-yzy",
+    roomCode: "ulz-ktmi-mti",
     state: "pending",
     student: "Raze",
     title: "Free Consultation",

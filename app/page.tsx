@@ -19,6 +19,7 @@ import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { goerli } from "viem/chains";
 import Book from "@/components/book";
 
+
 export default function Home() {
   const { chains, publicClient, webSocketPublicClient } = configureChains(
     [mainnet, goerli],
@@ -53,6 +54,7 @@ export default function Home() {
       {/* <Hud /> */}
       <Book />
       <Toaster />
+ 
     </WagmiConfig>
   );
 }

@@ -140,7 +140,7 @@ const Hud = () => {
     if (process.env.NEXT_PUBLIC_PROJECT_ID) {
       initialize(process.env.NEXT_PUBLIC_PROJECT_ID);
     }
-    handleDataForThem();
+    handleDataForThem(); 
   }, [isCoachPrivate]);
 
   useEffect(() => {
