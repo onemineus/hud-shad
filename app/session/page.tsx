@@ -26,6 +26,39 @@ import { Button } from "@/components/ui/button";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+/**
+ * Represents a page in a video conferencing application.
+ * 
+ * Example Usage:
+ * ```javascript
+ * import React from "react";
+ * import Page from "./Page";
+ * 
+ * const App = () => {
+ *   return (
+ *     <div>
+ *       <Page />
+ *     </div>
+ *   );
+ * };
+ * 
+ * export default App;
+ * ```
+ * 
+ * Inputs: None
+ * 
+ * Flow:
+ * 1. The component initializes the necessary variables and hooks, such as the router, access token, and various state variables.
+ * 2. It uses the `useEffect` hook to handle side effects when the access token or room state changes.
+ * 3. The component fetches audio and video streams using the `useAudio` and `useVideo` hooks, and updates the state accordingly.
+ * 4. It sets up a video reference using the `useRef` hook to display the local video stream.
+ * 5. The component updates the peer video reference when the peers state changes, and displays the first peer's video stream.
+ * 6. The component renders different UI elements based on the room state, such as the lobby or the room itself.
+ * 7. It handles user interactions, such as enabling/disabling audio and video, joining/leaving the room, and screen sharing.
+ * 8. The component uses the `ToastContainer` component from the `react-toastify` library to display toast notifications.
+ * 
+ * Outputs: The rendered page component.
+ */
 const Page = () => {
   const router = useRouter();
   const [accessTokenPrivate, setAccessTokenPrivate] = useAtom(accessToken);
@@ -77,7 +110,6 @@ const Page = () => {
     if (process.env.NEXT_PUBLIC_PROJECT_ID && roomState === "IDLE") {
       initialize(process.env.NEXT_PUBLIC_PROJECT_ID);
     }
-    console.log(roomCodePrivate, accessTokenPrivate);
     if (roomState === "INIT") {
       joinLobby.isCallable && joinLobby(roomCodePrivate, accessTokenPrivate);
     }
