@@ -59,8 +59,6 @@ import { toast, useToast } from "./ui/use-toast";
 import { useRouter } from "next/navigation";
 import { EventType, SlotType } from "@/lib/types";
 
-
-
 const Book = () => {
   // the current coach user data and his availability
   // demo
@@ -429,9 +427,12 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
           <div className="h-96 shrink-0 bg-slate-800 flex flex-col rounded-lg p-4 overflow-y-auto">
             {dayEvents.length > 0 ? (
               <div className="flex flex-col space-y-4">
-                {dayEvents.map((event) => {
+                {dayEvents.map((event, index) => {
                   return (
-                    <div className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center">
+                    <div
+                      key={index}
+                      className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center"
+                    >
                       <div className="flex flex-col space-y-2">
                         <div className="flex text-sm items-center space-x-2">
                           <div className="bg-slate-800 px-3 py-1 rounded-full text-sm capitalize">
