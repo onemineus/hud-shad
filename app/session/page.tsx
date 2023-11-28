@@ -28,12 +28,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 /**
  * Represents a page in a video conferencing application.
- * 
+ *
  * Example Usage:
  * ```javascript
  * import React from "react";
  * import Page from "./Page";
- * 
+ *
  * const App = () => {
  *   return (
  *     <div>
@@ -41,12 +41,12 @@ import "react-toastify/dist/ReactToastify.css";
  *     </div>
  *   );
  * };
- * 
+ *
  * export default App;
  * ```
- * 
+ *
  * Inputs: None
- * 
+ *
  * Flow:
  * 1. The component initializes the necessary variables and hooks, such as the router, access token, and various state variables.
  * 2. It uses the `useEffect` hook to handle side effects when the access token or room state changes.
@@ -56,7 +56,7 @@ import "react-toastify/dist/ReactToastify.css";
  * 6. The component renders different UI elements based on the room state, such as the lobby or the room itself.
  * 7. It handles user interactions, such as enabling/disabling audio and video, joining/leaving the room, and screen sharing.
  * 8. The component uses the `ToastContainer` component from the `react-toastify` library to display toast notifications.
- * 
+ *
  * Outputs: The rendered page component.
  */
 const Page = () => {
@@ -71,6 +71,7 @@ const Page = () => {
   const { initialize, isInitialized, roomState, me } = useHuddle01();
   const { joinRoom, leaveRoom, endRoom, lobbyPeers } = useRoom();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const peerMicRef = useRef<HTMLVideoElement>(null);
   const peerVideoRef = useRef<HTMLVideoElement>(null);
   const { peers } = usePeers();
 
@@ -151,8 +152,38 @@ const Page = () => {
     if (peers) {
       const val = peers[Object.keys(peers)[0]];
       if (peerVideoRef.current && val?.cam) {
-        console.log("s");
+        console.log("working");
         peerVideoRef.current.srcObject = getStream(val.cam);
+        peerVideoRef.current.onloadedmetadata = async () => {
+          console.warn("videoCard() | Metadata loaded...");
+          try {
+            if (peerVideoRef.current) {
+              peerVideoRef.current.muted = true;
+              await peerVideoRef.current.play();
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        };
+        peerVideoRef.current.onerror = () => {
+          console.error("videoCard() | Error is hapenning...");
+        };
+      }
+      if (peerMicRef.current && val?.mic) {
+        peerMicRef.current.srcObject = getStream(val.mic);
+        peerMicRef.current.onloadedmetadata = async () => {
+          console.warn("audioCard() | Metadata loaded...");
+          try {
+            if (peerMicRef.current) {
+              await peerMicRef.current.play();
+            }
+          } catch (error) {
+            console.error(error);
+          }
+        };
+        peerMicRef.current.onerror = () => {
+          console.error("audioCard() | Error is hapenning...");
+        };
       }
     }
   }, [peers]);
@@ -264,12 +295,14 @@ const Page = () => {
             <div className="bg-zinc-950 col-span-2 space-y-4 h-full flex flex-col p-4">
               <div className="bg-zinc-900 rounded-xl h-full w-full p-0">
                 <div className="bg-gray-800 relative h-full w-full rounded-xl overflow-hidden">
+                  peer video
                   <div>
                     <video
                       autoPlay={true}
                       ref={peerVideoRef}
                       className="h-full w-full absolute object-cover rounded-xl"
                     />
+                    <audio ref={peerMicRef}>Audio</audio>
                     <div className="absolute backdrop-blur-md bottom-4 left-4 bg-zinc-800 bg-opacity-20 rounded-lg px-3 py-2">
                       {"Narendra Modi"}
                     </div>
