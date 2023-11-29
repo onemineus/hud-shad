@@ -6,12 +6,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDEJWZoExVQyqQdxG7o2inesQmUTxlgsvo",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "huddle-shad.firebaseapp.com",
   projectId: "huddle-shad",
   storageBucket: "huddle-shad.appspot.com",
   messagingSenderId: "645242224331",
-  appId: "1:645242224331:web:53f1ee261c5c960082a54e",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
