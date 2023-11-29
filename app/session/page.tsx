@@ -326,7 +326,7 @@ const Page = () => {
                     />
                     <audio ref={peerMicRef}>Audio</audio>
                     <div className="absolute backdrop-blur-md bottom-4 left-4 bg-zinc-800 bg-opacity-20 rounded-lg px-3 py-2">
-                      {"Narendra Modi"}
+                      {"Someone Singh"}
                     </div>
                   </div>
                   <div className="absolute backdrop-blur-md bottom-4 right-4 bg-zinc-800 bg-opacity-20 rounded-full p-1">
@@ -493,7 +493,7 @@ const Page = () => {
                     />
                     <div className="flex flex-col">
                       <div className="text-zinc-100 text-xs font-semibold">
-                        {"Narendra Modi"}
+                        {"Someone Singh"}
                       </div>
                       <div className="text-zinc-400 text-xs">
                         {"0x4E8Bfs5t...74432d"}
