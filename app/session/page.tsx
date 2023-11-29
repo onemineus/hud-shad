@@ -295,7 +295,7 @@ const Page = () => {
             <div className="bg-zinc-950 col-span-2 space-y-4 h-full flex flex-col p-4">
               <div className="bg-zinc-900 rounded-xl h-full w-full p-0">
                 <div className="bg-gray-800 relative h-full w-full rounded-xl overflow-hidden">
-                  peer video
+                  {/* peer video */}
                   <div>
                     <video
                       autoPlay={true}

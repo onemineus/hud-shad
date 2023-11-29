@@ -1,8 +1,10 @@
+import { Timestamp } from "firebase/firestore";
+
 export type EventType = {
   coach: string;
   student: string;
   title: string;
-  date: Date;
+  date: Timestamp;
   fromHour: number;
   toHour: number;
   state: string;

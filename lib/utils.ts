@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
+import { Timestamp } from "firebase/firestore";
 import { twMerge } from "tailwind-merge";
+import { EventType } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -36,11 +38,12 @@ export const formatDate = (date: Date): string => {
   return date.toLocaleDateString("en-US", options);
 };
 
-export const extractUniqueDates = (eventsList: { date: Date }[]) => {
+export const extractUniqueDates = (eventsList: { date: Timestamp }[]) => {
   const uniqueDatesSet = new Set<number>(); // Using Set<number> for unique timestamps
 
   eventsList.forEach((obj) => {
-    uniqueDatesSet.add(obj.date.getTime());
+    console.log(obj);
+    uniqueDatesSet.add(obj.date?.toDate().getTime());
   });
 
   // Convert the timestamps back to Date objects
@@ -53,32 +56,34 @@ export const extractUniqueDates = (eventsList: { date: Date }[]) => {
 };
 
 export function filterSessionsByDate(
-  objects: {
-    coach: string;
-    student: string;
-    title: string;
-    date: Date;
-    fromHour: number;
-    toHour: number;
-    state: string;
-    game: string;
-    roomCode: string;
-  }[],
+  objects: EventType[],
   targetDate: Date
-): {
-  coach: string;
-  student: string;
-  title: string;
-  date: Date;
-  fromHour: number;
-  toHour: number;
-  state: string;
-  game: string;
-  roomCode: string;
-}[] {
-  return objects.filter(
-    (obj) =>
-      obj.date.toISOString().split("T")[0] ===
-      targetDate.toISOString().split("T")[0]
-  );
+): EventType[] {
+  // Filter objects based on the targetDate
+  console.log(objects);
+  const filteredObjects = objects.filter((obj) => {
+    console.log(
+      obj.date,
+      obj.date?.toDate,
+      typeof obj.date?.toDate === "function"
+    );
+    if (
+      obj.date &&
+      obj.date?.toDate &&
+      typeof obj.date?.toDate === "function"
+    ) {
+      const objDate = obj.date.toDate();
+
+      return (
+        objDate.toISOString().split("T")[0] ===
+        targetDate.toISOString().split("T")[0]
+      );
+    }
+    return false;
+  });
+
+  // Sort filteredObjects by the 'fromHour' property in ascending order
+  const sortedObjects = filteredObjects.sort((a, b) => a.fromHour - b.fromHour);
+
+  return sortedObjects;
 }

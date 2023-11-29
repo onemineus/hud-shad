@@ -40,12 +40,7 @@ import { Switch, Space } from "antd";
 import { IoLogOut } from "react-icons/io5";
 import { MdLogout } from "react-icons/md";
 import CalenderElement, { handleSignClick } from "./calenderElement";
-import {
-  coach,
-  eventsList,
-  sessionStorage,
-  student,
-} from "@/lib/db/simpleStorage";
+import { coach, eventsList, student } from "@/lib/db/simpleStorage";
 import { Calendar } from "./ui/calendar";
 import { DayClickEventHandler } from "react-day-picker";
 import {
@@ -58,6 +53,8 @@ import Hud from "./hud";
 import { toast, useToast } from "./ui/use-toast";
 import { useRouter } from "next/navigation";
 import { EventType, SlotType } from "@/lib/types";
+import { db } from "@/firebase/fire";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 
 const Book = () => {
   // the current coach user data and his availability
@@ -77,6 +74,7 @@ const Book = () => {
   };
 
   // states
+  const [allSessionsData, setAllSessionsData] = useState<EventType[]>([]);
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [isCoachPrivate, setIsCoachPrivate] = useAtom(isCoach);
   const [isCreatingPrivate, setIsCreatingPrivate] = useAtom(isCreating);
@@ -105,9 +103,27 @@ const Book = () => {
     }
   };
 
+  const getAllEventsData = async () => {
+    let data: any[] = [];
+    const querySnapshot = await getDocs(collection(db, "events"));
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      // console.log(doc.id, " => ", doc.data());
+      data.push(doc.data());
+    });
+    console.log(data);
+    setAllSessionsData(data);
+  };
+
+  const uploadEvents = async (data: EventType) => {
+    const docRef = await addDoc(collection(db, "events"), data);
+    console.log("Document written with ID: ", docRef.id);
+  };
+
   useEffect(() => {
     setDomLoaded(true);
-    const dates = extractUniqueDates(sessionStorage);
+    getAllEventsData();
+    const dates = extractUniqueDates(allSessionsData);
     console.log(dates);
     setBookedDates(dates);
   }, [isCoachPrivate]);
@@ -327,8 +343,10 @@ const Book = () => {
                               game: coachDataProp.game,
                               roomCode: code,
                             };
-                            sessionStorage.push(sessionData);
-                            console.log(sessionStorage);
+                            // uploadEvents(sessionData);
+
+                            // allSessionsData.push(sessionData);
+                            console.log(allSessionsData);
                             setIsDoneCreating(true);
                             toast({
                               title: "Scheduled: Catch up",
@@ -369,15 +387,12 @@ const Book = () => {
 export default Book;
 
 const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
-  console.log("bookedDates", bookedDates);
+  const [allSessionsData, setAllSessionsData] = useState<EventType[]>([]);
+
+  // console.log("bookedDates", bookedDates);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const bookedStyle = { border: "1px solid currentColor" };
-  const handleDayClick: DayClickEventHandler = (day, index) => {
-    setAccessTokenPrivate("");
-    console.log(day);
-    const a = filterSessionsByDate(sessionStorage, day);
-    setDayEvents(a);
-  };
+
   const [accessTokenPrivate, setAccessTokenPrivate] = useAtom(accessToken);
   const { address } = useAccount();
   const router = useRouter();
@@ -392,11 +407,37 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
   const [dayEvents, setDayEvents] = useState<EventType[]>([]);
   const [roomCodePrivate, setRoomCodePrivate] = useAtom(roomCode);
 
-  useEffect(() => {
-    const a = filterSessionsByDate(sessionStorage, selectedDate);
+  const getAllEventsData = async () => {
+    let data: any[] = [];
+    const querySnapshot = await getDocs(collection(db, "events"));
+    querySnapshot.forEach((doc) => {
+      // doc.data() is never undefined for query doc snapshots
+      // console.log(doc.id, " => ", doc.data());
+      // console.log(doc.data().date.toDate());
+      data.push(doc.data());
+    });
+    console.log(data);
+    setAllSessionsData(data);
+  };
+
+  const handleDayClick: DayClickEventHandler = (day, index) => {
+    setAccessTokenPrivate("");
+    console.log(allSessionsData, day);
+    const a = filterSessionsByDate(allSessionsData, day);
     console.log(a);
     setDayEvents(a);
-  }, [selectedDate]);
+  };
+
+  // useEffect(() => {
+  //   console.log(allSessionsData, selectedDate);
+  //   const a = filterSessionsByDate(allSessionsData, selectedDate);
+
+  //   setDayEvents(a);
+  // }, [selectedDate, allSessionsData]);
+
+  useEffect(() => {
+    getAllEventsData();
+  }, []);
 
   useEffect(() => {
     if (accessTokenPrivate !== "") {
@@ -438,7 +479,7 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
                           <div className="bg-slate-800 px-3 py-1 rounded-full text-sm capitalize">
                             {event.state}
                           </div>
-                          <div>{formatDate(event.date)}</div>
+                          <div>{formatDate(event.date.toDate())}</div>
                         </div>
                         <div className="text-xl font-bold">{event.title}</div>
                         <div className="flex text-sm space-x-2">
