@@ -115,7 +115,7 @@ const Book = () => {
     setAllSessionsData(data);
   };
 
-  const uploadEvents = async (data: EventType) => {
+  const uploadEvents = async (data: {}) => {
     const docRef = await addDoc(collection(db, "events"), data);
     console.log("Document written with ID: ", docRef.id);
   };
@@ -343,7 +343,7 @@ const Book = () => {
                               game: coachDataProp.game,
                               roomCode: code,
                             };
-                            // uploadEvents(sessionData);
+                            uploadEvents(sessionData);
 
                             // allSessionsData.push(sessionData);
                             console.log(allSessionsData);
