@@ -82,6 +82,7 @@ const Page = () => {
     stopAudioStream,
     error: micError,
     produceAudio,
+    isAudioOn,
     stopProducingAudio,
   } = useAudio();
   const {
@@ -90,6 +91,7 @@ const Page = () => {
     stream: videoStream,
     stopVideoStream,
     error: camError,
+    isVideoOn,
     produceVideo,
     stopProducingVideo,
   } = useVideo();
@@ -118,14 +120,20 @@ const Page = () => {
     }
   }, [accessTokenPrivate, roomState]);
 
-  useEffect(() => {
+  const handleControls = async () => {
     if (isVideoEnabled) {
+      if (!isVideoOn) {
+        await fetchVideoStream();
+      }
       produceVideo(videoStream);
     } else {
       stopProducingVideo();
     }
     if (isMicEnabled) {
       if (audioStream) {
+        if (isAudioOn) {
+          await fetchAudioStream();
+        }
         produceAudio(audioStream);
       }
     } else {
@@ -133,7 +141,11 @@ const Page = () => {
         stopProducingAudio();
       }
     }
-  }, [isVideoEnabled, isMicEnabled]);
+  };
+
+  useEffect(() => {
+    handleControls();
+  }, [isVideoEnabled, isMicEnabled, isVideoOn, isAudioOn, peers]);
 
   useEffect(() => {
     if (videoStream && videoRef?.current) {
@@ -153,7 +165,13 @@ const Page = () => {
       const val = peers[Object.keys(peers)[0]];
       if (peerVideoRef.current && val?.cam) {
         console.log("working");
+        // if (isPeerMuted) {
+        //   peerVideoRef.current.srcObject = null;
+        // } else {
+        //   peerVideoRef.current.srcObject = getStream(val.cam);
+        // }
         peerVideoRef.current.srcObject = getStream(val.cam);
+
         peerVideoRef.current.onloadedmetadata = async () => {
           console.warn("videoCard() | Metadata loaded...");
           try {
@@ -170,7 +188,11 @@ const Page = () => {
         };
       }
       if (peerMicRef.current && val?.mic) {
-        peerMicRef.current.srcObject = getStream(val.mic);
+        if (isPeerMuted) {
+          peerMicRef.current.srcObject = null;
+        } else {
+          peerMicRef.current.srcObject = getStream(val.mic);
+        }
         peerMicRef.current.onloadedmetadata = async () => {
           console.warn("audioCard() | Metadata loaded...");
           try {
@@ -186,7 +208,7 @@ const Page = () => {
         };
       }
     }
-  }, [peers]);
+  }, [peers, isVideoEnabled, isMicEnabled, isPeerMuted]);
 
   return (
     <div className="relative min-h-screen">
@@ -344,6 +366,7 @@ const Page = () => {
                     <div
                       onClick={() => {
                         setIsMicEnabled(!isMicEnabled);
+                        fetchAudioStream();
                       }}
                       className="bg-orange-700 cursor-pointer p-2 h-9 w-9 rounded"
                     >
@@ -353,6 +376,7 @@ const Page = () => {
                     <div
                       onClick={() => {
                         setIsMicEnabled(!isMicEnabled);
+                        stopAudioStream();
                       }}
                       className="bg-zinc-700 cursor-pointer p-2 h-9 w-9 rounded"
                     >
@@ -373,6 +397,7 @@ const Page = () => {
                     <div
                       onClick={() => {
                         setIsVideoEnabled(!isVideoEnabled);
+                        stopVideoStream();
                       }}
                       className="bg-zinc-700 cursor-pointer p-2 h-9 w-9 rounded"
                     >
@@ -409,6 +434,10 @@ const Page = () => {
                 </div>
                 <div
                   onClick={() => {
+                    stopProducingVideo();
+                    stopProducingAudio();
+                    setIsMicEnabled(false);
+                    setIsVideoEnabled(false);
                     leaveRoom();
                   }}
                   className="bg-orange-700 px-3 py-2 cursor-pointer rounded-lg text-xs capitalize"

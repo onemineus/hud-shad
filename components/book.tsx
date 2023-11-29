@@ -126,7 +126,7 @@ const Book = () => {
     const dates = extractUniqueDates(allSessionsData);
     console.log(dates);
     setBookedDates(dates);
-  }, [isCoachPrivate]);
+  }, [isCoachPrivate, isCreatingPrivate]);
 
   const { toast } = useToast();
   return (
@@ -368,7 +368,7 @@ const Book = () => {
             ) : isConnected && domLoaded && !isCreatingPrivate ? (
               //   stud dash
               <div>
-                <div></div>
+                <StudentDash bookedDates={bookedDates} />
               </div>
             ) : (
               <div className="absolute top-1/2 pt-16 w-full flex justify-center items-center">
@@ -450,6 +450,122 @@ const Coach = ({ bookedDates }: { bookedDates: Date[] }) => {
       <div className="p-8 flex space-y-8 flex-col lg:space-y-0 lg:space-x-8 lg:flex-row justify-between">
         <div className="flex flex-col w-full space-y-4">
           <div className="text-xl font-bold">Hi, {coach.name}</div>
+          <Calendar
+            // defaultMonth={new Date(2023, 10, 8)}
+            modifiers={{ booked: bookedDates }}
+            selected={selectedDate}
+            onSelect={(date: Date | undefined) => {
+              if (date) {
+                setSelectedDate(date);
+              }
+            }}
+            modifiersStyles={{ booked: bookedStyle }}
+            onDayClick={handleDayClick}
+          />
+        </div>
+        <div className="flex flex-col w-full space-y-4">
+          <div className="text-xl font-bold">Your Sessions</div>
+          <div className="h-96 shrink-0 bg-slate-800 flex flex-col rounded-lg p-4 overflow-y-auto">
+            {dayEvents.length > 0 ? (
+              <div className="flex flex-col space-y-4">
+                {dayEvents.map((event, index) => {
+                  return (
+                    <div
+                      key={index}
+                      className="bg-slate-600 w-full p-4 rounded-md flex justify-between items-center"
+                    >
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex text-sm items-center space-x-2">
+                          <div className="bg-slate-800 px-3 py-1 rounded-full text-sm capitalize">
+                            {event.state}
+                          </div>
+                          <div>{formatDate(event.date.toDate())}</div>
+                        </div>
+                        <div className="text-xl font-bold">{event.title}</div>
+                        <div className="flex text-sm space-x-2">
+                          <div>{`${event.fromHour}:00 - ${event.toHour}:00 ,`}</div>
+                          <div>{event.game}</div>
+                        </div>
+                      </div>
+                      <div
+                        className="cursor-pointer"
+                        onClick={async () => {
+                          handleSignClick(getMessage, address, signMessage);
+                          setRoomCodePrivate(event.roomCode);
+                        }}
+                      >
+                        <SiGooglemeet size={35} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="w-full h-full flex justify-center items-center">
+                No meetings today!
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StudentDash = ({ bookedDates }: { bookedDates: Date[] }) => {
+  const [allSessionsData, setAllSessionsData] = useState<EventType[]>([]);
+
+  // console.log("bookedDates", bookedDates);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const bookedStyle = { border: "1px solid currentColor" };
+
+  const [accessTokenPrivate, setAccessTokenPrivate] = useAtom(accessToken);
+  const { address } = useAccount();
+  const router = useRouter();
+
+  const { signMessage } = useSignMessage({
+    onSuccess: async (data) => {
+      const token = await getAccessToken(data, address as string);
+      setAccessTokenPrivate(token.accessToken);
+    },
+  });
+
+  const [dayEvents, setDayEvents] = useState<EventType[]>([]);
+  const [roomCodePrivate, setRoomCodePrivate] = useAtom(roomCode);
+
+  const getAllEventsData = async () => {
+    let data: any[] = [];
+    const querySnapshot = await getDocs(collection(db, "events"));
+    querySnapshot.forEach((doc) => {
+      data.push(doc.data());
+    });
+    console.log(data);
+    setAllSessionsData(data);
+  };
+
+  const handleDayClick: DayClickEventHandler = (day, index) => {
+    setAccessTokenPrivate("");
+    console.log(allSessionsData, day);
+    const a = filterSessionsByDate(allSessionsData, day);
+    console.log(a);
+    setDayEvents(a);
+  };
+
+  useEffect(() => {
+    getAllEventsData();
+  }, []);
+
+  useEffect(() => {
+    if (accessTokenPrivate !== "") {
+      router.push("/session");
+    }
+  }, [accessTokenPrivate]);
+
+  return (
+    <div>
+      <div className="p-8 flex space-y-8 flex-col lg:space-y-0 lg:space-x-8 lg:flex-row justify-between">
+        <div className="flex flex-col w-full space-y-4">
+          <div className="text-xl font-bold">Hi, {student.name}</div>
           <Calendar
             // defaultMonth={new Date(2023, 10, 8)}
             modifiers={{ booked: bookedDates }}
